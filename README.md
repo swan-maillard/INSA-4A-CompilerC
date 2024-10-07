@@ -1,88 +1,98 @@
-# IFCC - Compilateur pour un sous-ensemble de C
+# IFCC - Compiler for a Subset of C
 
-## Table des matières
+## Description
 
-- [Introduction](#introduction)
-- [Utilisation](#utilisation)
-  - [Compilation du compilateur IFCC](#compilation-du-compilateur-ifcc)
-  - [Compilation d'un programme](#compilation-dun-programme)
-  - [Assemblage et linking](#assemblage-et-linking)
-  - [Exécution du programme](#exécution-du-programme)
-- [Tests](#tests)
-- [Documentation](#documentation)
+**IFCC** is a compiler developed to translate source code written in a subset of C into Intel x86 or RISC-V assembly code.
 
-## Introduction
+The development of IFCC followed a **Test-Driven Development (TDD)** methodology, ensuring that each component of the compiler is thoroughly tested and validated through a suite of integration tests.
 
-IFCC est un compilateur développé pour traduire du code source écrit dans un sous-ensemble de C en code assembleur Intel x86 ou RISC-V.
+## Usage
 
-## Utilisation
+### Compiling the IFCC Compiler
 
-### Compilation du compilateur IFCC
+To compile IFCC, follow these steps:
 
-Pour compiler IFCC, suivez ces étapes :
+1. Ensure you have `make`, as well as `antlr` and its C++ runtime installed on your system. You can install ANTLR using the provided script `install-antlr.sh`.
+2. Navigate to the root directory of the IFCC project.
+3. Create a `config.mk` file that corresponds to your ANTLR installation, or use one of the provided files: `DI.mk` (installation via the script), `fedora.mk`, `ubuntu.mk`:
+   ```bash
+   ln -s <file>.mk config.mk
+   ```
+4. Run the command `make` to build the compiler.
 
-1. Assurez-vous que vous avez `make`, ainsi que `antlr` et son runtime C++ installés sur votre système. Vous pouvez installer antlr via le script `install-antlr.sh`.
-2. Allez dans le répertoire racine du projet IFCC.
-3. Créez le fichier `config.mk` correspondant à votre installation d'ANTLR, ou utilisez un des fichiers fourni `DI.mk` (installation via le script), `fedora.mk`, `ubuntu.mk` : 
-```bash
-ln -s <fichier>.mk config.mk
-```
-4. Lancez la commande `make`.
+### Compiling a Program
 
-### Compilation d'un programme
+Once IFCC is compiled, you can use it to translate your program written in the supported C subset. Here’s how:
 
-Une fois IFCC compilé, vous pouvez utiliser le compilateur pour traduire votre programme écrit dans le sous-ensemble de C pris en charge. Voici comment procéder :
+1. Write your program in a file with the `.c` extension.
+2. Use the following command to compile your program:
 
-1. Écrivez votre programme dans un fichier avec l'extension `.c`.
-2. Utilisez la commande suivante pour compiler votre programme :
+   ```bash
+   ./ifcc [-t target] [-o <output_file_name>.s] [-d] [-s] <source_file_name>.c
+   ```
 
-```bash
-./ifcc [-t target] [-o <nom_fichier_cible>.s] [-d] [-s] <nom_fichier_source>.c
-```
+   - The `-t target` option allows you to specify the target architecture for assembly generation. You can choose between `x86-64` for Intel x86 and `rv64` for RISC-V. By default, the code is compiled to Intel x86 assembly.
+   - The `-o <output_file_name>.s` option specifies the name of the output file for the generated assembly code. By default, the output file name is `./out.s`.
+   - The `-s` option displays the generated code in standard output.
+   - The `-d` option outputs a representation of the intermediate representation in the error output.
 
-- L'option `-t target` vous permet de spécifier l'architecture cible pour la génération de l'assembleur. Vous pouvez choisir entre `x86-64` pour Intel x86 et `rv64` pour RISC-V. Par défaut, le code est compilé en assembleur Intel x86.
-- L’option `-o <nom_fichier_cible>.s` permet de spécifier le nom du fichier de sortie pour le code assembleur généré. Par défaut, le nom du fichier de sortie est `./out.s`.
-- L'option `-s` permet d'afficher le code généré dans la sortie standard
-- L'option `-d` permet d'afficher une représentation de la représentation intermédiaire dans la sortie d'erreur
+### Assembling and Linking
 
-### Assemblage et édition des liens
+After generating the assembly code, you need to assemble and link it based on the target architecture. Depending on your machine, you can do the following:
 
-Après avoir généré le code assembleur, vous devez l'assembler et le linker en fonction de l'architecture cible. Selon votre machine, vous pouvez par exemple procéder comme suit :
+- To assemble and link the assembly code into an executable for Intel x86:
 
-- Pour assembler et linker le code assembleur en code exécutable Intel x86 :
+   ```bash
+   gcc <source_file_name>.s [-o <executable_name>]
+   ```
 
-```bash
-gcc <nom_fichier_source>.s [-o <nom_executable>]
-```
+- To assemble and link the assembly code into an executable for RISC-V:
 
-- Pour assembler et linker le code assembleur en code exécutable RISC-V :
+   ```bash
+   riscv64-linux-gnu-gcc <source_file_name>.s [-o <executable_name>]
+   ```
 
-```bash
-riscv64-linux-gnu-gcc <nom_fichier_source>.s [-o <nom_executable>]
-```
+   By default, the name of the generated executable is `./a.out`.
 
-Par défaut, le nom de l’exécutable généré est `./a.out`.
+### Executing the Program
 
-### Exécution du programme
-
-Une fois que vous avez obtenu l'exécutable, vous pouvez l'exécuter en utilisant la commande suivante :
+Once you have the executable, you can run it using the following command:
 
 ```bash
 ./a.out
 ```
 
-Si vous avez compilé en RISC-V et souhaitez exécuter le programme sur un émulateur, veuillez utiliser l'émulateur approprié pour l'architecture RISC-V.
+If you compiled for RISC-V and wish to run the program on an emulator, please use the appropriate emulator for the RISC-V architecture.
 
-## Tests
+## Testing
 
-IFCC est livré avec un ensemble de tests d'intégration pour vérifier son bon fonctionnement. Les tests se trouvent dans le dossier `tests/testfiles/`. Vous pouvez exécuter tous les tests en utilisant la commande suivante :
+IFCC comes with a suite of integration tests to verify its functionality. The tests are located in the `tests/testfiles/` directory. You can run all tests using the following command:
 
 ```bash
 make check
 ```
 
-Cela lancera les tests avec l'architecture Intel x86 et RISC-V. Vous pouvez également spécifier `make check-x86` ou `make check-rv64` pour exécuter les tests sur une architecture spécifique.
+This will run the tests for both Intel x86 and RISC-V architectures. You can also specify `make check-x86` or `make check-rv64` to run tests for a specific architecture. The TDD approach used during development ensures that all components are thoroughly tested, providing confidence in the compiler's stability and functionality.
 
 ## Documentation
 
-Le code est documenté via dowygen, pour générer la documentation en local, éxécuter `make doc`.
+The code is documented using Doxygen. To generate the documentation locally, run:
+
+```bash
+make doc
+```
+
+This will create a comprehensive set of documentation files that you can browse for more detailed information on the compiler's functionality and usage.
+
+## Authors
+
+- BIAUD Alexandre (alexandre.biaud@insa-lyon.fr)
+- EL MIR Raoul (raoul.el-mir@insa-lyon.fr)
+- HASAN TAWFIQ Amar (amar.hasan-tawfiq@insa-lyon.fr)
+- KAROUIA Lilia (lilia.karouia@insa-lyon.fr)
+- MAILLARD Swan (maillard.swan@gmail.com)
+- PEIGUE Alix (alix.peigue@insa-lyon.fr)
+
+## License
+
+This project is licensed under the MIT License. Please consult the `LICENSE` file for more information.
